@@ -58,5 +58,5 @@ def home(request):
     print(feed.entity[1])
 
 
-    return Response({"Hello Worldo"}, status=HTTP_200_OK)
+    return Response({"Connected to db"}, status=HTTP_200_OK)
 
