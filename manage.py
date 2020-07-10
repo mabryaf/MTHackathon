@@ -30,7 +30,7 @@ from time import sleep
 
 def main():
     with SSHTunnelForwarder(
-    ('52.149.162.104'), 
+    ('10.0.0.37'), 
     ssh_username="testuser",
     ssh_password="Welc0me@123456789",
     local_bind_address=('127.0.0.1', 5432),
