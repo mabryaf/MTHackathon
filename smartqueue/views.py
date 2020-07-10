@@ -18,7 +18,7 @@ from rest_framework.status import (
 # from rest_framework.parsers import JSONParser, ParseError
 
 from . import models
-# from . import serializers
+from . import serializers
 
 import json
 
@@ -59,4 +59,8 @@ def home(request):
 
 
     return Response({"Connected to db private"}, status=HTTP_200_OK)
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = models.Customer.objects.all()
+    serializer_class = serializers.CustomerSerializer
 

@@ -1,6 +1,14 @@
 from django.db import models
 
+class Customer(models.Model):
 
+    # id = models.IntegerField()
+    first_name = models.CharField(max_length = 255, default = '', blank = True)
+    last_name = models.CharField(max_length = 255, default = '', blank = True)
+
+    class Meta:
+        db_table = 'customer'
+        managed = False
 
 # class Trains(models.Model):
 #     id = models.IntegerField()
