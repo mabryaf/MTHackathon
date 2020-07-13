@@ -19,7 +19,11 @@ from rest_framework import routers
 from smartqueue import views
 
 router = routers.DefaultRouter()
-router.register(r'customers', views.CustomerViewSet)
+router.register(r'persons', views.PersonViewSet)
+router.register(r'locations', views.LocationViewSet)
+router.register(r'resources', views.ResourceViewSet)
+router.register(r'queues', views.QueueViewSet)
+router.register(r'reservations', views.ReservationViewSet)
 
 
 urlpatterns = [
@@ -27,6 +31,4 @@ urlpatterns = [
     path('home/', views.home),
     path('api/', include(router.urls)),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-
-
 ]

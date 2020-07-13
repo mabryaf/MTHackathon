@@ -6,3 +6,4 @@ gtfs==0.1.2
 sshtunnel==0.1.5
 psycopg2==2.8.5
 sqlparse==0.3.1
+arrow==0.15.7

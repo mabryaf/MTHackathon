@@ -21,17 +21,19 @@
 #     main()
 
 
-#!/usr/bin/env python
+# !/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
 from sshtunnel import SSHTunnelForwarder
 from time import sleep
 
+# 52.149.162.104
+# 10.0.0.37
 def main():
     with SSHTunnelForwarder(
-    ('10.0.0.37'), 
-    ssh_username="testuser",
+    ('52.147.195.220'), 
+    ssh_username="hackserveradmin",
     ssh_password="Welc0me@123456789",
     local_bind_address=('127.0.0.1', 5432),
     remote_bind_address=('127.0.0.1', 5432)) as server:

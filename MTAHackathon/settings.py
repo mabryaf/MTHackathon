@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'smartqueue.apps.SmartqueueConfig',
     'rest_framework',
-    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -84,18 +83,15 @@ WSGI_APPLICATION = 'MTAHackathon.wsgi.application'
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'hackathondb',                     
-        'USER': 'postgres',
-        'PASSWORD': 'Abhi26101998@',
-        'HOST': 'localhost',
-        'PORT': '',
+ 'default': {
+'ENGINE': 'django.db.backends.postgresql_psycopg2',
+'NAME': 'hackathondb',                    
+'USER': 'postgres',
+'PASSWORD': 'Welc0me@123456789',
+'HOST': 'localhost',
+'PORT': '5432',
     }
 }
-# DATABASES = {'default': dj_database_url.config(default='postgres://hackathondb:YOURPASSWORD@YOURHOST:5432/YOURDATABASENAME')}
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -114,18 +110,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'rest_framework.authentication.TokenAuthentication',
-#     ),
-#     'DEFAULT_PERMISSION_CLASSES': (
-#         'rest_framework.permissions.IsAuthenticated',
-#     ),
-#     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-#     'PAGE_SIZE': 1000
-# }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

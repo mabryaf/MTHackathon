@@ -1,9 +1,32 @@
 from . import models
 from rest_framework import serializers
 
-class CustomerSerializer(serializers.ModelSerializer):
-    # allergic_food = serializers.ListField(allow_empty=True, min_length=None, max_length=None)
-    # meal_type = serializers.ListField(allow_empty=True, min_length=None, max_length=None)
+# 5. User --> id(p.k) ????
+class PersonSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Customer
-        fields = ['first_name', 'last_name']
+        model = models.Person
+        fields = ['id', 'name']
+
+# 3. Location --> address(p.k), max_capacity, queues(f.k)?
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Location
+        fields = ['id', 'address', 'max_capacity']
+
+# 4. Resource --> id(p.k), capacity, __occupant_sensor
+class ResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Resource
+        fields = ['id', 'capacity', 'occupant_sensor']
+
+# 2. Queue --> id(p.k), open_datetime, close_datetime, max_capacity, address, resource_id(f.k), reservations list? -- one to many relation with class Reservation.
+class QueueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Queue
+        fields = ['id', 'open_datetime', 'close_datetime', 'max_capacity', 'address', 'resource_id', 'location']
+
+# 1. Reservation --> id(p.k), person_id?, state, reward_points
+class ReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Reservation
+        fields = ['id', 'person_id', 'state', 'reward_points', 'queue']
