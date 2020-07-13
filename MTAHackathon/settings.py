@@ -86,10 +86,10 @@ DATABASES = {
  'default': {
 'ENGINE': 'django.db.backends.postgresql_psycopg2',
 'NAME': 'hackathondb',                    
-'USER': 'postgres',
+'USER': 'hackserver1admin@hackserver1',
 'PASSWORD': 'Welc0me@123456789',
-'HOST': 'localhost',
-'PORT': '',
+'HOST': 'hackserver1.postgres.database.azure.com',
+'PORT': '5432',
     }
 }
 
