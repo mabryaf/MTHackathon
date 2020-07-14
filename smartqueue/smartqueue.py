@@ -831,24 +831,29 @@ class SmartQueue:
     return result
 
   @staticmethod
-  def __reservation_details(reservation, queue):
+  def __reservation_details(reservation, queue, resource):
 
     details = {
+        'reservation_id':reservation.id,
         'reservation_state':reservation.state,
+        'reward_points':reservation.reward_points,
         'resource':queue.resource_id,
         'location':queue.address,
         'start_time':queue.open_datetime,
         'end_time':queue.close_datetime,
-        'reward_points':reservation.reward_points,
+        'queue_percentage': queue.active_occupants()/queue.max_capacity,
+        'train_percentage': resource.occupants()/resource.capacity
     }
     return details
 
   def list_reservations(self, person_id):
     reservations = []
+    
     for queue in self.__queues:
       for reservation in queue.reservations:
         if reservation.person_id == person_id:
-          details = self.__reservation_details(reservation, queue)
+          resource = self.__find_resource(queue.resource_id)
+          details = self.__reservation_details(reservation, queue, resource)
           reservations.append(details)
     return reservations
 

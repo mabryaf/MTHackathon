@@ -47,12 +47,15 @@ class ReservationSerializer(serializers.Serializer):
     # reward_points = serializers.IntegerField()
     # occupants = serializers.IntegerField()
     fields = (
+        "reservation_id",
         "reservation_state",
+        "reward_points",
         "resource",
         "location",
         "start_time",
         "end_time",
-        "reward_points",
+        "queue_percentage",
+        "train_percentage",
     )
     # reservation_state = serializers.CharField(max_length=200)
     # resource = serializers.CharField(max_length=200)

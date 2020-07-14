@@ -155,5 +155,13 @@ def reserve(request):
     proof_of_purchase = request.data.get("proof_of_purchase")
     occupants = request.data.get("occupants")
 
+    #reserve
+    queue_id = ''
+    for queue in sq._SmartQueue__queues:
+        queue_id = queue.id
+    print(queue_id)
+    reserved = sq.reserve(person_id, "", 1, queue_id)
+    print(reserved)
+
     return Response({'token'})
 
