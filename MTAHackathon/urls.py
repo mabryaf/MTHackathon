@@ -23,7 +23,7 @@ router.register(r'persons', views.PersonViewSet)
 router.register(r'locations', views.LocationViewSet)
 router.register(r'resources', views.ResourceViewSet)
 router.register(r'queues', views.QueueViewSet)
-router.register(r'reservations', views.ReservationViewSet)
+# router.register(r'reservations', views.ReservationViewSet)
 router.register(r'customers', views.CustomerViewSet, basename='customers')
 
 
@@ -32,6 +32,7 @@ urlpatterns = [
     path('home/', views.home),
     path('users/', views.users),
     path('api/', include(router.urls)),
+    path('api/reservations', views.reservations),
     path('admin/api/<str:pk>/', views.CustomerViewSet),
 
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),

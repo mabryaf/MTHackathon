@@ -53,19 +53,19 @@ class QueueViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.QueueSerializer
 
 # 1. Reservation --> id(p.k), person_id?, state, reward_points
-class ReservationViewSet(viewsets.ModelViewSet):
-    queryset = models.Reservation.objects.all()
-    serializer_class = serializers.ReservationSerializer
+# class ReservationViewSet(viewsets.ModelViewSet):
+#     queryset = models.Reservation.objects.all()
+#     serializer_class = serializers.ReservationSerializer
 
-class Reservation:
-  def user(self, person_id, reward_points):
-    self.id = uuid.uuid1()
-    self.person_id = person_id
-    self.state = ReservationState.RESERVED
-    self.reward_points = reward_points
+# class Reservation:
+#   def user(self, person_id, reward_points):
+#     self.id = uuid.uuid1()
+#     self.person_id = person_id
+#     self.state = ReservationState.RESERVED
+#     self.reward_points = reward_points
   
-  def update(self, new_state):
-    self.state = new_state
+#   def update(self, new_state):
+#     self.state = new_state
 
 # class Customer(self, name):
 #     def __init__(self, name, max_capacity):
@@ -129,4 +129,31 @@ class CustomerViewSet(viewsets.ViewSet):
                 reward_points = x.reward_points
         return Response({"pk": pk, "name": name, "reward_points": reward_points})
 
+@api_view(['POST'])
+def reservations(request):
+    person_id = request.data.get("person_id")
+
+    #reserve
+    queue_id = ''
+    for queue in sq._SmartQueue__queues:
+        queue_id = queue.id
+    print(queue_id)
+    reserved = sq.reserve(person_id, "", 1, queue_id)
+    print(reserved)
+
+    reservations = sq.list_reservations(person_id)
+    for reservation in reservations:
+        reservation['reservation_state'] = str(reservation['reservation_state'])
+        reservation['start_time'] = str(reservation['start_time'])
+        reservation['end_time'] = str(reservation['end_time'])
+
+    return JsonResponse(reservations, safe=False)
+
+@api_view(['POST'])
+def reserve(request):
+    person_id = request.data.get("person_id")
+    proof_of_purchase = request.data.get("proof_of_purchase")
+    occupants = request.data.get("occupants")
+
+    return Response({'token'})
 
