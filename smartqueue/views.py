@@ -121,10 +121,12 @@ class CustomerViewSet(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         pk = ''
         name = ''
+        reward_points = 100
         for x in tests.customers.values():
             if x.person_id == kwargs['pk']:
                 pk = x.person_id
                 name = x.name
-        return Response({"pk": pk, "name": name})
+                reward_points = x.reward_points
+        return Response({"pk": pk, "name": name, "reward_points": reward_points})
 
 

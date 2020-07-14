@@ -38,3 +38,4 @@ class UserSerializer(serializers.Serializer):
 class CustomerSerializer(serializers.Serializer):
     person_id = serializers.CharField(max_length=200)
     name = serializers.CharField(max_length=256)
+    reward_points = serializers.IntegerField()
