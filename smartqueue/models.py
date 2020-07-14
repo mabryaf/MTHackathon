@@ -8,47 +8,46 @@ import uuid # unique IDs for queues
 import arrow # advanced date data types
 from enum import IntEnum # for reservation states
 
-def ranges_overlap(r1_start, r1_end, r2_start, r2_end):
-  starts_overlap = (r1_start >= r2_start) and (r1_start <= r2_end)
-  ends_overlap = (r1_end >= r2_start) and (r1_end <= r2_end)
-  r1_is_a_superset = (r1_start <= r2_start) and (r1_end >= r2_end)
+# def ranges_overlap(r1_start, r1_end, r2_start, r2_end):
+#   starts_overlap = (r1_start >= r2_start) and (r1_start <= r2_end)
+#   ends_overlap = (r1_end >= r2_start) and (r1_end <= r2_end)
+#   r1_is_a_superset = (r1_start <= r2_start) and (r1_end >= r2_end)
 
-  ranges_overlap = starts_overlap or ends_overlap or r1_is_a_superset
-  return ranges_overlap
+#   ranges_overlap = starts_overlap or ends_overlap or r1_is_a_superset
+#   return ranges_overlap
 
-# 5. User --> id(p.k) ????
-class PersonManager(models.Manager):
-    def get_name(self):
-        return self.name
+# # 5. User --> id(p.k) ????
+# class PersonManager(models.Manager):
+#     def get_name(self):
+#         return self.name
 class Person(models.Model):
     # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) #not usable if not postgres
     name = models.CharField(max_length=63)
     def get_name(self):
         return self.name
 
-class LocationManager(models.Manager):
-    def remaining_capacity(self, start_datetime, end_datetime):
-        occupants_scheduled_to_be_at_location = 0
-        for queue in self.queue_set:
-            queue_in_range = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
+# class LocationManager(models.Manager):
+#     def remaining_capacity(self, start_datetime, end_datetime):
+#         occupants_scheduled_to_be_at_location = 0
+#         for queue in self.queue_set:
+#             queue_in_range = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
 
-        if queue_in_range:
-            occupants_scheduled_to_be_at_location += queue.active_occupants()
+#         if queue_in_range:
+#             occupants_scheduled_to_be_at_location += queue.active_occupants()
         
-        return self.max_capacity - occupants_scheduled_to_be_at_location
-# 3. Location --> address(p.k), max_capacity, queues(f.k)?
+#         return self.max_capacity - occupants_scheduled_to_be_at_location
+# # 3. Location --> address(p.k), max_capacity, queues(f.k)?
 class Location(models.Model):
     address = models.CharField(max_length=63)
     max_capacity = models.IntegerField()
 
+# class ResourceManager(models.Manager):
+#     def occupants(self):
+#         return self.occupant_sensor()
+#     def remaining_capacity(self):
+#         return self.capacity - self.occupant_sensor()
 
-class ResourceManager(models.Manager):
-    def occupants(self):
-        return self.occupant_sensor()
-    def remaining_capacity(self):
-        return self.capacity - self.occupant_sensor()
-
-# 4. Resource --> id(p.k), capacity, __occupant_sensor
+# # 4. Resource --> id(p.k), capacity, __occupant_sensor
 class Resource(models.Model):
     capacity = models.IntegerField()
     occupant_sensor = models.IntegerField()
@@ -75,10 +74,9 @@ class ReservationState(IntEnum):
 class ReservationManager(models.Manager):
     def update(self, new_state):
         self.state = new_state
-
 # 1. Reservation --> id(p.k), person_id?, state, reward_points
 class Reservation(models.Model):
     person_id = models.ForeignKey(Person, on_delete=models.CASCADE)
-    state = models.IntegerField(choices=ReservationState.choices(), default=ReservationState.RESERVED)
+    state = models.IntegerField()
     reward_points = models.IntegerField()
     queue = models.ForeignKey(Queue, on_delete=models.CASCADE)

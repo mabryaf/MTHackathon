@@ -30,3 +30,11 @@ class ReservationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Reservation
         fields = ['id', 'person_id', 'state', 'reward_points', 'queue']
+
+class UserSerializer(serializers.Serializer):
+    person_id = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=200)
+
+class CustomerSerializer(serializers.Serializer):
+    person_id = serializers.CharField(max_length=200)
+    name = serializers.CharField(max_length=256)
