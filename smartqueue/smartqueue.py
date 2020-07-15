@@ -848,6 +848,7 @@ class SmartQueue:
         'end_time':queue.close_datetime,
         'reward_points':reservation.reward_points,
         'reservation_id':reservation.id,
+        'queue_id':queue.id,
         'queue_percentage': queue.active_occupants()/queue.max_capacity,
         'train_percentage': resource.occupants()/resource.capacity
     }
