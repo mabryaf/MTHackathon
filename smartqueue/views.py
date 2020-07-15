@@ -19,7 +19,7 @@ from .smartqueue import sq
 
 import json
 import requests
-import datetime
+# import datetime
 import random #simulate the assignment of addresses
 import unittest
 import uuid # unique IDs for queues
@@ -27,6 +27,7 @@ import arrow # advanced date data types
 
 from random import randrange # to simulate occupancy sensor and queue times
 from enum import Enum # for reservation states
+from datetime import datetime
 
 #instantiate smartqueue
 ###Check if the update() is persistent
@@ -107,7 +108,19 @@ def cancel_reservation(request):
     #execute cancellation
     result = sq.cancel_reservation(queue_id, person_id)
 
-    return Response({'Your reservation has been cancelled'})
+    return Response({'Cancelled'})
+    # return JsonResponse(result, safe=False)
+
+@api_view(['POST'])
+def complete_reservation(request):
+    #Get posted data from JSON request
+    queue_id = request.data.get("queue_id")
+    person_id = request.data.get("person_id")
+
+    #execute cancellation
+    result = sq.complete_reservation(queue_id, person_id)
+
+    return Response({'Completed'})
     # return JsonResponse(result, safe=False)
 
 @api_view(['POST'])
@@ -135,15 +148,45 @@ def search(request):
     #Retrieve details of interest in api
     resource_list = []
     for x in r["GetTripStatusJsonResult"]:
-        resource_list.append((x["TrainName"], x["Origin"], x["OriginDateTime"], x["DestinationDateTime"]))
+        # origintime = x["OriginDateTime"]
+        # otime = origintime[:10]+" "+origintime[11:16]
+        # destinationtime = x["DestinationDateTime"]
+        # dtime = destinationtime[:10]+" "+destinationtime[11:16]
+        # resource_list.append((int(x["TrainName"]), x["Origin"], otime, dtime))
+        resource_list.append((int(x["TrainName"])))
+
+    print(resource_list)
+    # for queue in sq._SmartQueue__queues:
+    #     print(queue.id)
+    # for resource in sq._SmartQueue__resources:
+    #     print(resource.id)    
+    # for location in sq._SmartQueue__locations:
+    #     print(location.address)
+
+    # a = "2020-07-15T15:20:44:00"
     
-    #Create list that will be processed by smartqueue
+
+    # if arrow.get() >= arrow.get('2020-07-15 13:00'):
+    #     print(True)
+    # sample = sq.list_queue_options(8840, "POUGHKEEPSIE", '2020-07-06 13:00', '2020-07-16 13:20')
+    # working sample
+    sample = sq.list_queue_options(8815, "Grand Central", '2020-07-06 13:00', '2020-07-16 13:20')
+
+    
+    for s in sample:
+        s['start_time'] = s['start_time'].format('YYYY-MM-DD HH:mm')
+        s['end_time'] = s['start_time'].format('YYYY-MM-DD HH:mm')
+    
+    # #Create list that will be processed by smartqueue
     final_list = []
     for n in resource_list:
         options = sq.list_queue_options(n[0], n[1], n[2], n[3])
         final_list.append(options)
 
-    return JsonResponse(final_list, safe=False)
+    print(sample)
+    print(final_list)
+    # return JsonResponse(final_list, safe=False)
+    return JsonResponse(sample, safe=False)
 
 @api_view(['GET'])
 def test(request):

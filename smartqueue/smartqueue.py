@@ -163,8 +163,8 @@ class ReserveActionResult(Enum):
 class Queue:
   def __init__(self, max_capacity, open_datetime, close_datetime, address, resource_id):
     self.id =  uuid.uuid1().hex
-    self.open_datetime = open_datetime
-    self.close_datetime = close_datetime
+    self.open_datetime = arrow.get(open_datetime)
+    self.close_datetime = arrow.get(close_datetime)
     self.max_capacity = max_capacity
     self.address = address
     self.resource_id = resource_id
@@ -529,6 +529,10 @@ class TestQueue(unittest.TestCase):
 unittest.main(argv=[''], verbosity=2, exit=False)
 
 def ranges_overlap(r1_start, r1_end, r2_start, r2_end):
+  r1_start = arrow.get(r1_start)
+  r2_start = arrow.get(r2_start)
+  r1_end = arrow.get(r1_end)
+  r2_end = arrow.get(r2_end)
   starts_overlap = (r1_start >= r2_start) and (r1_start <= r2_end)
   ends_overlap = (r1_end >= r2_start) and (r1_end <= r2_end)
   r1_is_a_superset = (r1_start <= r2_start) and (r1_end >= r2_end)
@@ -548,7 +552,7 @@ class Location:
   def remaining_capacity(self, start_datetime, end_datetime):
     occupants_scheduled_to_be_at_location = 0
     for queue in self.queues:
-      queue_in_range = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
+      queue_in_range = ranges_overlap(arrow.get(start_datetime), arrow.get(end_datetime), queue.open_datetime, queue.close_datetime)
 
       if queue_in_range:
         occupants_scheduled_to_be_at_location += queue.active_occupants()
@@ -720,7 +724,7 @@ class SmartQueue:
   def __location_does_not_exist(self, address):
     exists = False
     for location in self.__locations:
-      if location.address == address: exists = True
+      if location.address.lower() == address.lower(): exists = True
     return not exists
 
   def __add_resource_if_it_does_not_exist(self, resource_id, resource):
@@ -762,7 +766,7 @@ class SmartQueue:
 
   def __find_location(self, address):
     for location in self.__locations:
-      if location.address == address:
+      if location.address.lower() == address.lower():
         return location
   
   def __find_resource(self, resource_id):
@@ -788,7 +792,7 @@ class SmartQueue:
     for queue in self.__queues:
       #determine if the queue matches criteria
       resource_matches = (queue.resource_id == resource_id)
-      location_matches = (queue.address == address)
+      location_matches = (queue.address.lower() == address.lower())
       time_matches = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
       queue_matches = resource_matches and location_matches and time_matches
 

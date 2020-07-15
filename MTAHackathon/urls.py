@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/reservations', views.reservations),
     path('api/reserve', views.reserve),
     path('api/cancel_reservation', views.cancel_reservation),
+    path('api/complete_reservation', views.complete_reservation),
     path('api/search', views.search),
     path('api/<str:pk>/', views.CustomerViewSet),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
