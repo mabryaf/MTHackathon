@@ -119,6 +119,11 @@ def search(request):
     time = request.data.get("time")
     bestqueue = request.data.get("bestqueue")
 
+    # location1 = 51, POUGHKEEPSIE
+    # location2 = 1, GRAND CENTRAL
+    # date = 2020/07/15
+    # time = 1354
+
     #Create url api for stations
     url = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/"+location1+"/"+location2+"/DepartBy/"+date+"/"+time+"/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
     test = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/51/1/DepartBy/2020/07/15/1354/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
@@ -169,8 +174,10 @@ def test(request):
 
 @api_view(['GET'])
 def testing(request):
+    queuelist = []
     for queue in sq._SmartQueue__queues:
-        print(queue.id)
-    return Response({'Welcome to Smartqueue API'})
+        queuelist.append(queue.id)
+        # print(queue.id)
+    return JsonResponse(queuelist, safe=False)
 
 
