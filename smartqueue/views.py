@@ -11,8 +11,10 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
-    HTTP_200_OK
+    HTTP_200_OK,
+    HTTP_201_CREATED
 )
+from rest_framework import status
 # from rest_framework.parsers import JSONParser, ParseError
 
 from . import models
@@ -20,8 +22,13 @@ from . import serializers
 from . import smartqueue
 from . import tests
 
+from django.http import JsonResponse
+
+
 import json
 import requests
+import datetime
+import random
 
 from random import randrange # to simulate occupancy sensor and queue times
 import random #simulate the assignment of addresses
@@ -29,13 +36,14 @@ import unittest
 import uuid # unique IDs for queues
 import arrow # advanced date data types
 from enum import Enum # for reservation states
+from django.http import JsonResponse
 
-sq = smartqueue.SmartQueue(smartqueue.testqueue_schedule)
 
-# 5. User --> id(p.k) ????
-class PersonViewSet(viewsets.ModelViewSet):
-    queryset = models.Person.objects.all()
-    serializer_class = serializers.PersonSerializer
+sq = smartqueue.SmartQueue(smartqueue.test2)
+# for queue in sq._SmartQueue__queues:
+#     user = random.choice(tests.users)["person_id"]
+#     resered = sq.reserve("e973d77cc5c911eaa2ba0242ac100002", "", 1, queue.id)
+    # print (queue.id, user)
 
 # 3. Location --> address(p.k), max_capacity, queues(f.k)?
 class LocationViewSet(viewsets.ModelViewSet):
@@ -47,58 +55,22 @@ class ResourceViewSet(viewsets.ModelViewSet):
     queryset = models.Resource.objects.all()
     serializer_class = serializers.ResourceSerializer
 
+    # results = models.Resource.objects.values('id', 'resource_id','train_from','train_to','max_occupancy','occupancy_sensor','updated_date','locations')
+    # print(list(results))
+
 # 2. Queue --> id(p.k), open_datetime, close_datetime, max_capacity, address, resource_id(f.k), reservations list? -- one to many relation with class Reservation.
 class QueueViewSet(viewsets.ModelViewSet):
     queryset = models.Queue.objects.all()
     serializer_class = serializers.QueueSerializer
 
-# 1. Reservation --> id(p.k), person_id?, state, reward_points
-# class ReservationViewSet(viewsets.ModelViewSet):
-#     queryset = models.Reservation.objects.all()
-#     serializer_class = serializers.ReservationSerializer
-
-# class Reservation:
-#   def user(self, person_id, reward_points):
-#     self.id = uuid.uuid1()
-#     self.person_id = person_id
-#     self.state = ReservationState.RESERVED
-#     self.reward_points = reward_points
-  
-#   def update(self, new_state):
-#     self.state = new_state
-
-# class Customer(self, name):
-#     def __init__(self, name, max_capacity):
-#         self.name = name
-
-#     def get_name(self):
-#         return self.name
-
-# Create your views here.
-
-@api_view(['GET'])
-def home(request):
-    customers = models.Person.objects.all()
-    # test = smartqueue_v0_3.SmartQueue(smartqueue_v0_3.queue_schedule)
-    # print(test.list_queue_options("resource1", "address1", arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm')))
-    # print("ENDOFLINE")
-    # print(customers)
-    # for customer in customers:
-    #     print(customer)
-
-    # print(a.get_name())
-    print(sq.list_reservations("abc123"))
-    sq.update(smartqueue.testqueue_schedule)
-    # sq._SmartQueue__resource
-    for resource in sq._SmartQueue__resources:
-        print(resource.id)
-    
-    return Response({"Connected to db private"}, status=HTTP_200_OK)
-
-@api_view(['GET'])
+# @api_view(['GET'])
 def users(request):
-    results = serializers.UserSerializer(tests.users, many=True).data
-    return Response(results)
+#     queue_id = ''
+#     for queue in sq._SmartQueue__queues:
+#         queue_id = queue.id
+#         user = random.choice(tests.users)["person_id"]
+#         sq.reserve("e973d77cc5c911eaa2ba0242ac100002", "", 1, queue_id)
+    return Response("")
 
 # class CustomerViewSet(viewsets.ViewSet):
 #     # Required for the Browsable API renderer to have a nice form.
@@ -133,19 +105,21 @@ class CustomerViewSet(viewsets.ViewSet):
 def reservations(request):
     person_id = request.data.get("person_id")
 
-    #reserve
     queue_id = ''
     for queue in sq._SmartQueue__queues:
         queue_id = queue.id
-    print(queue_id)
-    reserved = sq.reserve(person_id, "", 1, queue_id)
-    print(reserved)
-
+        print(queue_id)
+    reserved = sq.reserve("abc_123", "", 1, queue_id)
+    
     reservations = sq.list_reservations(person_id)
     for reservation in reservations:
         reservation['reservation_state'] = str(reservation['reservation_state'])
         reservation['start_time'] = str(reservation['start_time'])
         reservation['end_time'] = str(reservation['end_time'])
+        queryset = models.Resource.objects.filter(resource_id=reservation["resource"])
+        for query in queryset:
+            reservation["train_from"]= query.train_from
+            reservation["train_to"]= query.train_to
 
     return JsonResponse(reservations, safe=False)
 
@@ -154,14 +128,35 @@ def reserve(request):
     person_id = request.data.get("person_id")
     proof_of_purchase = request.data.get("proof_of_purchase")
     occupants = request.data.get("occupants")
+    queue_id = request.data.get("queue_id")
 
-    #reserve
-    queue_id = ''
-    for queue in sq._SmartQueue__queues:
-        queue_id = queue.id
-    print(queue_id)
-    reserved = sq.reserve(person_id, "", 1, queue_id)
-    print(reserved)
+    return Response({'Your reservation has been made'})
 
-    return Response({'token'})
+@api_view(['POST'])
+def cancel_reservation(request):
+    queue_id = request.data.get("queue_id")
+    person_id = request.data.get("person_id")
+
+    # sq.cancel_reservation(queue_id, person_id)
+
+    return Response({'Your reservation has been cancelled'})
+
+@api_view(['POST'])
+def search(request):
+    location1 = request.data.get("location1")
+    #give location/location name, then i can get resource_id
+    location2 = request.data.get("location2")
+    date = request.data.get("date")
+    time = request.data.get("time")
+    bestqueue = request.data.get("bestqueue")
+
+    #make db query based on post data
+    #now i have train names
+
+    #def list_queue_options(self, resource_id, address, start_datetime, end_datetime):
+    # get resource names, train departure, train occupancy, queue occupancy, route_points
+    # sort via nearest time, then sort via descending route points
+
+    return Response({'request'})
+
 
