@@ -5,6 +5,7 @@ from django.db import models
 class Resource(models.Model):
     class Meta:
         db_table = 'resource'
+        managed = False
         unique_together = ('id', 'train_from', 'train_to', 'updated_date')
 
     id = models.UUIDField(max_length=32, primary_key=True)
@@ -19,6 +20,7 @@ class Resource(models.Model):
 class Location(models.Model):
     class Meta:
         db_table = 'location'
+        managed = False
 
     id = models.UUIDField(max_length=32, primary_key=True)
     address = models.CharField(max_length=30)
@@ -30,6 +32,7 @@ class Location(models.Model):
 class Queue(models.Model):
     class Meta:
         db_table = 'queue'
+        managed = False
 
     queue_id = models.UUIDField(max_length=32, primary_key=True)
     start_datetime = models.DateTimeField()
@@ -40,6 +43,10 @@ class Queue(models.Model):
     resource_id = models.IntegerField()
     location = models.ForeignKey(Location, related_name='queues', on_delete=models.CASCADE)
 
-
-
+class Customer(models.Model):
+    class Meta:
+        db_table = 'customers'
+    person_id = models.UUIDField(max_length=32, primary_key=True)
+    name = models.CharField(max_length=30)
+    reward_points = models.IntegerField()
 
