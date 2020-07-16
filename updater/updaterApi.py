@@ -5,6 +5,7 @@ from smartqueue.smartqueue import sq
 
 #Retrieve the smartqueue schedule and convert to json
 def _get_json():
+    print("updaterapi")
     r = requests.get("https://smartqueueapi.azurewebsites.net/resource/")
 
     try:
