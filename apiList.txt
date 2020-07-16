@@ -1,0 +1,85 @@
+"queues": "http://mtahackathonsmartqueueb.azurewebsites.net/api/queues", (GET)
+"resources": "http://mtahackathonsmartqueueb.azurewebsites.net/api/resources", (GET) 
+"customers": "http://mtahackathonsmartqueueb.azurewebsites.net/api/customers" (GET)
+"locations": "http://mtahackathonsmartqueueb.azurewebsites.net/api/locations", (GET) (DROPDOWN FOR STATIONS)
+
+"reservations" "http://mtahackathonsmartqueueb.azurewebsites.net/api/reservations" (POST)
+REQUEST:
+{
+    "person_id": "abc_123"
+}
+RESPONSE:
+details = {
+        'reservation_id':reservation.id,
+        'reservation_state':reservation.state,
+	'start_time':queue.open_datetime,
+        'end_time':queue.close_datetime,
+        'resource':queue.resource_id,
+        'address':queue.address,
+        'destination':queue.destination,
+	'reward_points':reservation.reward_points,
+        'queue_percentage': queue.active_occupants()/queue.max_capacity,
+        'train_percentage': resource.occupants()/resource.capacity
+    }
+
+"miss_reservation": "http://mtahackathonsmartqueueb.azurewebsites.net/api/miss_reservation" (POST)
+REQUEST:
+{
+    "person_id":"",
+    "queue_id":""
+}
+RESPONSE:
+"Missed"
+
+"cancel_reservation": "http://mtahackathonsmartqueueb.azurewebsites.net/api/cancel_reservation" (POST)
+REQUEST:
+{
+    "person_id":"",
+    "queue_id":""
+}
+RESPONSE:
+"Cancelled"
+
+"complete_reservation": "http://mtahackathonsmartqueueb.azurewebsites.net/api/complete_reservation" (POST)
+REQUEST:
+{
+    "person_id":"",
+    "queue_id":""
+}
+RESPONSE:
+"Completed"
+
+"reserve": "http://mtahackathonsmartqueueb.azurewebsites.net/api/reserve" (POST)
+REQUEST:
+{
+    "person_id":"",
+    "proof_of_purchase":"",
+    "occupants": 1,
+    "queue_id":""
+}
+RESPONSE:
+reward_points
+
+"search": "http://mtahackathonsmartqueueb.azurewebsites.net/api/search" (POST)
+REQUEST:
+{
+    "resource_id":"", (preferably int, but ill convert it to integer just to be sure)
+    "address_id":"",
+    "address":"",
+    "destination":"",
+    "datetime":"",
+    "sort_bestqueue": "true/false (to sort via best queue or by arrival time)"
+}
+RESPONSE:
+    option =  {
+        'queue_id':queue.id, 
+        'start_time':queue.open_datetime, 
+        'end_time':queue.close_datetime, 
+	'resource_id':queue.resource_id, 
+        'address':queue.address, 
+        'destination':queue.destination,
+        'reward': reward,
+        'queue_percentage': queue.active_occupants()/queue.max_capacity,
+        'train_percentage': resource.occupants()/resource.capacity,
+	'max_capacity':queue.max_capacity,
+        }

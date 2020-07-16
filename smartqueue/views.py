@@ -58,7 +58,7 @@ def miss_reservation(request):
     queue_id = request.data.get("queue_id")
     person_id = request.data.get("person_id")
 
-    #execute cancellation
+    #execute missed
     result = sq.miss_reservation(queue_id, person_id)
 
     return Response({'Missed'})
@@ -82,7 +82,7 @@ def complete_reservation(request):
     queue_id = request.data.get("queue_id")
     person_id = request.data.get("person_id")
 
-    #execute cancellation
+    #execute completion
     result = sq.complete_reservation(queue_id, person_id)
 
     return Response({'Completed'})
@@ -112,21 +112,21 @@ def reserve(request):
 @api_view(['POST'])
 def search(request):
     #Get posted data from JSON request
-    resource_id = request.data.get("resource_id")
-    address_id = request.data.get("address_id")
+    # resource_id = request.data.get("resource_id")
+    # address_id = request.data.get("address_id")
     address = request.data.get("address")
     destination = request.data.get("destination")
     datetime = request.data.get("datetime")
     sort_bestqueue = request.data.get("sort_bestqueue")
 
     datetime = arrow.get(datetime)
-
-    options = sq.list_queue_options(int(resource_id), address, destination, datetime, datetime.shift(minutes=+20))
+    
+    options = sq.list_queue_options(8837, address, destination, datetime, datetime.shift(minutes=+60))
 
     if sort_bestqueue:
         options = sorted(options, key = lambda k:(-k['reward'],k['start_time']))
-    else:
-        options = sorted(options, key = lambda k:k['start_time'])
+    # else:
+    #     options = sorted(options, key = lambda k:k['start_time'])
     for option in options:
         option['start_time'] = str(option['start_time'])
         option['end_time'] = str(option['end_time'])
