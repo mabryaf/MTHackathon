@@ -801,15 +801,18 @@ class SmartQueue:
   def list_queue_options(self, resource_id, address, destination, start_datetime, end_datetime):
     options = []
     for queue in self.__queues:
+      print("AAA")
+      print(queue,queue.resource_id)
       #determine if the queue matches criteria
-      resource_matches = (queue.resource_id == resource_id)
+      # resource_matches = (queue.resource_id == resource_id)
       location_matches = (queue.address.lower() == address.lower())
       destination_matches = (queue.destination.lower() == destination.lower())
       time_matches = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
-      queue_matches = resource_matches and location_matches and destination_matches and time_matches
+      queue_matches = location_matches and destination_matches and time_matches
 
       #determine if the queue has capacity
       resource = self.__find_resource(queue.resource_id)
+      print(resource.remaining_capacity())
       remaining_resource_capacity = resource.remaining_capacity()
       location = self.__find_location(queue.address)
       remaining_location_capacity = location.remaining_capacity(start_datetime, end_datetime)
@@ -823,7 +826,8 @@ class SmartQueue:
       queue_has_capacity = remaining_queue_capacity > 0
 
       if (queue_matches and queue_has_capacity):
-        resource = self.__find_resource(resource_id)
+        resource = self.__find_resource(queue.resource_id)
+        print(resource, "BBB")
         remaining_resource_capacity = resource.remaining_capacity()
 
         location = self.__find_location(address)

@@ -118,12 +118,17 @@ def search(request):
     address_id = request.data.get("address_id")
     address = request.data.get("address")
     destination = request.data.get("destination")
-    datetime = request.data.get("date")
+    datetime = request.data.get("datetime")
     sort_bestqueue = request.data.get("sort_bestqueue")
 
     datetime = arrow.get(datetime)
 
+    print(resource_id)
+    print(address)
+    print(destination)
+    print(datetime)
     options = sq.list_queue_options(int(resource_id), address, destination, datetime, datetime.shift(minutes=+20))
+    print(options)
     for option in options:
         option['start_time'] = str(option['start_time'])
         option['end_time'] = str(option['end_time'])
