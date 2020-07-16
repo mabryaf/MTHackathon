@@ -1,7 +1,6 @@
 from django.db import models
 
 # Create your models here.
-
 class Resource(models.Model):
     class Meta:
         db_table = 'resource'
@@ -16,7 +15,6 @@ class Resource(models.Model):
     occupancy_sensor = models.CharField(max_length=20)
     updated_date = models.DateField()
 
-
 class Location(models.Model):
     class Meta:
         db_table = 'location'
@@ -27,7 +25,6 @@ class Location(models.Model):
     address_id = models.IntegerField()
     max_capacity = models.IntegerField()
     resource = models.ForeignKey(Resource, related_name='locations', on_delete=models.CASCADE)
-
 
 class Queue(models.Model):
     class Meta:

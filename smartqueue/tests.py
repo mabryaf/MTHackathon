@@ -1,34 +1,6 @@
 from django.test import TestCase
 
 # Create your tests here.
-import uuid # unique IDs for queues
-
-# users = [
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Jerry Overton"
-#     },
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Abhinav Chaudhary"
-#     },
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Mabry Fonseca"
-#     },
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Abhishek Kumar"
-#     },
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Hitesh Kumar"
-#     },
-#     {
-#         "person_id": uuid.uuid1().hex,
-#         "name": "Diwakar Peddinti"
-#     },
-# ]
 
 users = [
     {

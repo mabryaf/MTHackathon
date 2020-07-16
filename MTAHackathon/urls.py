@@ -17,9 +17,11 @@ from django.contrib import admin
 from django.urls import path, include   
 from rest_framework import routers
 from smartqueue import views
+from smartqueue.smartqueue import sq
+import requests
+import json
 
 router = routers.DefaultRouter()
-# router.register(r'persons', views.PersonViewSet)
 router.register(r'locations', views.LocationViewSet)
 router.register(r'resources', views.ResourceViewSet)
 router.register(r'queues', views.QueueViewSet)
@@ -27,14 +29,20 @@ router.register(r'customers', views.CustomerViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('home/', views.test),
-    path('homing/', views.testing),
+    path('', views.home),
+    path('home/', views.home),
+    path('test/', views.test),
     path('api/', include(router.urls)),
     path('api/reservations', views.reservations),
     path('api/reserve', views.reserve),
+    path('api/miss_reservation', views.miss_reservation),
     path('api/cancel_reservation', views.cancel_reservation),
     path('api/complete_reservation', views.complete_reservation),
     path('api/search', views.search),
-    path('api/<str:pk>/', views.CustomerViewSet),
     path('api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
+
+#Gets initial smartqueue schedule
+r = requests.get("https://smartqueueapi.azurewebsites.net/resource/")
+r = json.loads(r.text)
+sq.update(r)

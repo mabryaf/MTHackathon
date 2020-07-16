@@ -1,6 +1,6 @@
 from django.http import JsonResponse, HttpResponse
 
-from rest_framework import viewsets, mixins, filters
+from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -10,24 +10,17 @@ from rest_framework.status import (
     HTTP_201_CREATED
 )
 
+from datetime import datetime
+import json
+import requests
+import arrow # advanced date data types
+
 from . import models
 from . import serializers
 from . import smartqueue
 from . import tests
 
 from .smartqueue import sq
-
-import json
-import requests
-# import datetime
-import random #simulate the assignment of addresses
-import unittest
-import uuid # unique IDs for queues
-import arrow # advanced date data types
-
-from random import randrange # to simulate occupancy sensor and queue times
-from enum import Enum # for reservation states
-from datetime import datetime
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = models.Customer.objects.all()
@@ -49,22 +42,27 @@ class ResourceViewSet(viewsets.ModelViewSet):
 def reservations(request):
     #Get posted data from JSON request
     person_id = request.data.get("person_id")
-
-    #add one reservation for user 1
-    # queue_id = ''
-    # for queue in sq._SmartQueue__queues:
-    #     queue_id = queue.id
-    # sq.reserve("e973d45cc5c911eaa2ba0242ac100002", "", 1, queue_id)
     
     #list the reservations
     reservations = sq.list_reservations(person_id)
-    print(reservations, person_id)
     for reservation in reservations:
         reservation['reservation_state'] = str(reservation['reservation_state'])
         reservation['start_time'] = str(reservation['start_time'])
         reservation['end_time'] = str(reservation['end_time'])
 
     return JsonResponse(reservations, safe=False)
+
+@api_view(['POST'])
+def miss_reservation(request):
+    #Get posted data from JSON request
+    queue_id = request.data.get("queue_id")
+    person_id = request.data.get("person_id")
+
+    #execute cancellation
+    result = sq.miss_reservation(queue_id, person_id)
+
+    return Response({'Missed'})
+    # return JsonResponse(result, safe=False)
 
 @api_view(['POST'])
 def cancel_reservation(request):
@@ -123,12 +121,12 @@ def search(request):
 
     datetime = arrow.get(datetime)
 
-    print(resource_id)
-    print(address)
-    print(destination)
-    print(datetime)
     options = sq.list_queue_options(int(resource_id), address, destination, datetime, datetime.shift(minutes=+20))
-    print(options)
+
+    if sort_bestqueue:
+        options = sorted(options, key = lambda k:(-k['reward'],k['start_time']))
+    else:
+        options = sorted(options, key = lambda k:k['start_time'])
     for option in options:
         option['start_time'] = str(option['start_time'])
         option['end_time'] = str(option['end_time'])
@@ -180,18 +178,14 @@ def search(request):
     # return JsonResponse(sample, safe=False)
 
 @api_view(['GET'])
-def test(request):
-    r = requests.get("https://smartqueueapi.azurewebsites.net/resource/")
-    r = json.loads(r.text)
-    sq.update(r)
+def home(request):
     return Response({'Welcome to Smartqueue API'})
 
 @api_view(['GET'])
-def testing(request):
+def test(request):
     queuelist = []
     for queue in sq._SmartQueue__queues:
         queuelist.append(queue.id)
-        print((queue.id, queue.resource_id, queue.address))
     return JsonResponse(queuelist, safe=False)
 
 
