@@ -7,15 +7,15 @@ Original file is located at
     https://colab.research.google.com/drive/1Pvcqcg3XtA_JhshkWWkx_6Bk7RkpKJAW
 """
 
-#advanced date data types
+# advanced date data types
 # ! pip install arrow
 
-from random import randrange # to simulate occupancy sensor and queue times
-import random #simulate the assignment of addresses
+from random import randrange  # to simulate occupancy sensor and queue times
+import random  # simulate the assignment of addresses
 import unittest
-import uuid # unique IDs for queues
-import arrow # advanced date data types
-from enum import Enum # for reservation states
+import uuid  # unique IDs for queues
+import arrow  # advanced date data types
+from enum import Enum  # for reservation states
 
 def sim_occupancy_sensor():
   occupants = randrange(50)
@@ -31,13 +31,13 @@ def random_datetime():
   Date = Year +'-' + Month + '-' + Day + ' ' + Hour + ':' + Minute
   return arrow.get(Date, 'YYYY-MM-DD HH:mm')
 
-def queue(address, resource_id):
+def queue(address, destination, resource_id):
   QUEUE_SPAN_IN_MINS = 10
   id = uuid.uuid1().hex
   start = random_datetime()
   end = start.shift(minutes=+QUEUE_SPAN_IN_MINS)
   max = 10
-  return {'queue_id':id, 'start_datetime':start, 'end_datetime':end, 'max_capacity':max, 'address':address, 'resource_id':resource_id}
+  return {'queue_id':id, 'start_datetime':start, 'end_datetime':end, 'max_capacity':max, 'address':address, 'destination':destination, 'resource_id':resource_id}
 
 def random_address():
   addresses = ["Address A", "Address B", "Address C", "Address D"]
@@ -46,10 +46,11 @@ def random_address():
 def location(resource_id):
   NUM_QUEUES = 3
   address = random_address()
+  destination = 'destination1'
   
   queues = []
   for i in range(0,NUM_QUEUES):
-    queues.append(queue(address, resource_id))
+    queues.append(queue(address, destination, resource_id))
   
   return {'address':address, 'max_capacity':10, 'queues':queues}
 
@@ -161,12 +162,13 @@ class ReserveActionResult(Enum):
   OTHER_FAILURE = 3
 
 class Queue:
-  def __init__(self, max_capacity, open_datetime, close_datetime, address, resource_id):
+  def __init__(self, max_capacity, open_datetime, close_datetime, address, destination, resource_id):
     self.id =  uuid.uuid1().hex
     self.open_datetime = arrow.get(open_datetime)
     self.close_datetime = arrow.get(close_datetime)
     self.max_capacity = max_capacity
     self.address = address
+    self.destination = destination
     self.resource_id = resource_id
     self.reservations = []
     self.status = QueueStatus.ACTIVE
@@ -260,8 +262,9 @@ class TestQueue(unittest.TestCase):
     open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     close = open.shift(minutes=+10)
     address = "123main"
+    destination = 'destination1'
     resource_id = "resource1"
-    self.queue = Queue(10, open, close, address, resource_id)
+    self.queue = Queue(10, open, close, address, destination, resource_id)
 
   def test_queue_creation(self):
     self.assertTrue(isinstance(self.queue.id, str))
@@ -575,8 +578,9 @@ class TestLocation(unittest.TestCase):
     open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     close = open.shift(minutes=+10)
     address = '123main'
+    destination = 'dest'
     resource_id = 'resource1'
-    queue = Queue(5, open, close, address, resource_id)
+    queue = Queue(5, open, close, address, destination, resource_id)
     self.location.add_queue(queue)
 
     self.assertEqual(len(self.location.queues),1)
@@ -587,6 +591,7 @@ class TestLocation(unittest.TestCase):
     default_queue_max_capacity = 5
     remaining_resource_capacity = 10
     address = '123main'
+    destination = 'destination1'
     resource_id = 'resource1'
     proof_of_purchase = 'purchase'
     occupants = 1
@@ -595,7 +600,7 @@ class TestLocation(unittest.TestCase):
     #queue 1
     queue1_open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     queue1_close = arrow.get('2020-07-04 13:16', 'YYYY-MM-DD HH:mm')
-    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, resource_id)
+    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue1)
     remaining_location_capacity = self.location.remaining_capacity(queue1_open, queue1_close)
     self.location.queues[0].reserve("person1", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -603,7 +608,7 @@ class TestLocation(unittest.TestCase):
     #queue 2
     queue2_open = arrow.get('2020-07-04 13:05', 'YYYY-MM-DD HH:mm')
     queue2_close = arrow.get('2020-07-04 13:14', 'YYYY-MM-DD HH:mm')
-    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, resource_id)
+    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
     self.location.add_queue(queue2)
     remaining_location_capacity = self.location.remaining_capacity(queue2_open, queue2_close)
     self.location.queues[1].reserve("person2", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -613,7 +618,7 @@ class TestLocation(unittest.TestCase):
     #queue 3
     queue3_open = arrow.get('2020-07-04 13:13', 'YYYY-MM-DD HH:mm')
     queue3_close = arrow.get('2020-07-04 13:20', 'YYYY-MM-DD HH:mm')
-    queue3 = Queue(default_queue_max_capacity, queue3_open, queue1_close, address, resource_id)
+    queue3 = Queue(default_queue_max_capacity, queue3_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue3)
     remaining_location_capacity = self.location.remaining_capacity(queue3_open, queue3_close)
     self.location.queues[2].reserve("person5", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -631,6 +636,7 @@ class TestLocation(unittest.TestCase):
     self.location.max_capacity = 2
     default_queue_max_capacity = 5
     address ='123main'
+    destination = 'destination1'
     resource_id = 'resource1'
     proof_of_purchase = 'purchase'
     occupants = 1
@@ -639,13 +645,13 @@ class TestLocation(unittest.TestCase):
     #queue 1
     queue1_open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     queue1_close = arrow.get('2020-07-04 13:16', 'YYYY-MM-DD HH:mm')
-    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, resource_id)
+    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue1)
 
     #queue 2
     queue2_open = arrow.get('2020-07-04 13:05', 'YYYY-MM-DD HH:mm')
     queue2_close = arrow.get('2020-07-04 13:14', 'YYYY-MM-DD HH:mm')
-    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, resource_id)
+    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
     self.location.add_queue(queue2)
 
     remaining_resource_capacity = 10
@@ -756,8 +762,10 @@ class SmartQueue:
           max_capacity = queue['max_capacity']
           start_datetime = queue['start_datetime']
           end_datetime = queue['end_datetime']
+          address = queue['address']
+          destination = queue['destination']
 
-          new_queue = Queue(max_capacity, start_datetime, end_datetime, address, resource_id)
+          new_queue = Queue(max_capacity, start_datetime, end_datetime, address, destination, resource_id)
           self.__queues.append(new_queue)
           
           #add the new queue to the proper location
@@ -775,26 +783,30 @@ class SmartQueue:
         return resource
 
   @staticmethod
-  def __queue_option(queue, reward):
+  def __queue_option(queue, reward, resource):
     option =  {
         'queue_id':queue.id, 
         'start_time':queue.open_datetime, 
         'end_time':queue.close_datetime, 
-        'max_capacity':queue.max_capacity, 
+        'resource_id':queue.resource_id, 
         'address':queue.address, 
-        'resource_id':queue.resource_id,
-        'reward': reward
+        'destination':queue.destination,
+        'reward': reward,
+        'queue_percentage': queue.active_occupants()/queue.max_capacity,
+        'train_percentage': resource.occupants()/resource.capacity,
+        'max_capacity':queue.max_capacity
         }
     return option
   
-  def list_queue_options(self, resource_id, address, start_datetime, end_datetime):
+  def list_queue_options(self, resource_id, address, destination, start_datetime, end_datetime):
     options = []
     for queue in self.__queues:
       #determine if the queue matches criteria
       resource_matches = (queue.resource_id == resource_id)
       location_matches = (queue.address.lower() == address.lower())
+      destination_matches = (queue.destination.lower() == destination.lower())
       time_matches = ranges_overlap(start_datetime, end_datetime, queue.open_datetime, queue.close_datetime)
-      queue_matches = resource_matches and location_matches and time_matches
+      queue_matches = resource_matches and location_matches and destination_matches and time_matches
 
       #determine if the queue has capacity
       resource = self.__find_resource(queue.resource_id)
@@ -818,7 +830,7 @@ class SmartQueue:
         remaining_location_capacity = location.remaining_capacity(start_datetime, end_datetime)
 
         reward_points = queue.reward(remaining_resource_capacity, remaining_location_capacity)
-        options.append(self.__queue_option(queue, reward_points))
+        options.append(self.__queue_option(queue, reward_points, resource))
     
     return options
 
@@ -845,14 +857,14 @@ class SmartQueue:
   def __reservation_details(reservation, queue, resource):
 
     details = {
+        'reservation_id':reservation.id,
         'reservation_state':reservation.state,
-        'resource':queue.resource_id,
-        'location':queue.address,
         'start_time':queue.open_datetime,
         'end_time':queue.close_datetime,
+        'resource':queue.resource_id,
+        'address':queue.address,
+        'destination':queue.destination,
         'reward_points':reservation.reward_points,
-        'reservation_id':reservation.id,
-        'queue_id':queue.id,
         'queue_percentage': queue.active_occupants()/queue.max_capacity,
         'train_percentage': resource.occupants()/resource.capacity
     }
@@ -895,7 +907,47 @@ def dummy_sensor():
 class TestSmartQueue(unittest.TestCase):
 
   def setUp(self):
-    
+    queue_schedule = [
+                      {'resource_id':'resource1', 
+                      'max_occupancy':5, 
+                      'occupancy_sensor':dummy_sensor, 
+                      'locations':[{'address':'address1', 
+                                    'max_capacity':3, 
+                                    'queues':[{'queue_id':'queue1', 
+                                                'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
+                                                'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
+                                                'max_capacity':6, 
+                                                'address':'address1',
+                                                "destination": "destination1",
+                                                'resource_id':'resource1'}
+                                              ]
+                                    }
+                                    ]
+                      },
+                      {'resource_id':'resource2', 
+                      'max_occupancy':4, 
+                      'occupancy_sensor':dummy_sensor, 
+                      'locations':[{'address':'address2', 
+                                    'max_capacity':5,   
+                                    'queues':[{'queue_id':'queue2', 
+                                                'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
+                                                'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
+                                                'max_capacity':2, 
+                                                'address':'address2',
+                                                "destination": "destination1",
+                                                'resource_id':'resource2'},
+                                              {'queue_id':'queue3', 
+                                                'start_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
+                                                'end_datetime':arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm'), 
+                                                'max_capacity':3, 
+                                                'address':'address2',
+                                                "destination": "destination1", 
+                                                'resource_id':'resource2'}
+                                              ]
+                                    }
+                                    ]
+                      }    
+    ]
     
     self.smartqueue = SmartQueue(queue_schedule)
   
@@ -911,8 +963,9 @@ class TestSmartQueue(unittest.TestCase):
                                                 'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':6, 
-                                                'address':'address1', 
-                                                'resource_id':'resource1'}
+                                                'address':'address1',
+                                                "destination": "destination1", 
+                                                'resource_id':'resource3'}
                                               ]
                                     }
                                     ]
@@ -922,7 +975,7 @@ class TestSmartQueue(unittest.TestCase):
 
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource3', 'address1', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource3', 'address1', 'destination1', start_datetime, end_datetime)
     self.assertEqual(len(queue_options), 1)
 
     #test addding a new location
@@ -936,8 +989,9 @@ class TestSmartQueue(unittest.TestCase):
                                                 'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':6, 
-                                                'address':'address1', 
-                                                'resource_id':'resource1'}
+                                                'address':'address3',
+                                                'destination': 'destination1',
+                                                'resource_id':'resource3'}
                                               ]
                                     }
                                     ]
@@ -947,7 +1001,7 @@ class TestSmartQueue(unittest.TestCase):
 
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource3', 'address3', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource3', 'address3', 'destination1', start_datetime, end_datetime)
     self.assertEqual(len(queue_options), 1)
 
     #ignore duplicate resources and locations
@@ -961,7 +1015,8 @@ class TestSmartQueue(unittest.TestCase):
                                                 'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':6, 
-                                                'address':'address1', 
+                                                'address':'address1',
+                                                'destination': 'destination1',
                                                 'resource_id':'resource1'}
                                               ]
                                     }
@@ -984,7 +1039,7 @@ class TestSmartQueue(unittest.TestCase):
     #find available queues for resource 1
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', 'destination1', start_datetime, end_datetime)
     self.assertEqual(len(queue_options), 1)
 
     #make a reservation
@@ -995,7 +1050,7 @@ class TestSmartQueue(unittest.TestCase):
     self.assertEqual(result['code'], ReserveActionResult.SUCCESS)
 
     #find available queues for resource 1
-    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', 'destination1', start_datetime, end_datetime)
 
     #queues with no capacity should not be listed as an option
     self.assertEqual(len(queue_options), 0)
@@ -1010,7 +1065,7 @@ class TestSmartQueue(unittest.TestCase):
     #find available queues for resource 1
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', 'destination1', start_datetime, end_datetime)
     self.assertEqual(len(queue_options), 1)
 
     #make a reservation for resource 1
@@ -1028,7 +1083,7 @@ class TestSmartQueue(unittest.TestCase):
     #find available queues for resource 2
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource2', 'address2', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource2', 'address2', 'destination1', start_datetime, end_datetime)
     self.assertEqual(len(queue_options), 2)
 
     #make a reservation for the first queue option for resource 2
@@ -1039,14 +1094,14 @@ class TestSmartQueue(unittest.TestCase):
     #check the remaining reward points of queues for resource 1
     start_datetime = arrow.get('2020-07-06 13:05', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:15', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource1', 'address1', 'destination1', start_datetime, end_datetime)
     one_third = 1/3
     self.assertEqual(queue_options[0]['reward'],one_third)
 
     #check the remaining reward points of queues for resource 2
     start_datetime = arrow.get('2020-07-06 12:50', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:11', 'YYYY-MM-DD HH:mm')
-    queue_options = self.smartqueue.list_queue_options('resource2', 'address2', start_datetime, end_datetime)
+    queue_options = self.smartqueue.list_queue_options('resource2', 'address2', 'destination1', start_datetime, end_datetime)
     self.assertEqual(queue_options[0]['reward'],0.5)
     self.assertEqual(queue_options[1]['reward'],1)
   
@@ -1081,7 +1136,8 @@ testqueue= [
                                                 'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':6, 
-                                                'address':'address1', 
+                                                'address':'address1',
+                                                'destination':'destination1',
                                                 'resource_id':'resource1'}
                                               ]
                                     }
@@ -1096,13 +1152,15 @@ testqueue= [
                                                 'start_datetime':arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':2, 
-                                                'address':'address2', 
+                                                'address':'address2',
+                                                'destination':'destination1',
                                                 'resource_id':'resource2'},
                                               {'queue_id':'queue3', 
                                                 'start_datetime':arrow.get('2020-07-06 13:10', 'YYYY-MM-DD HH:mm'), 
                                                 'end_datetime':arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm'), 
                                                 'max_capacity':3, 
-                                                'address':'address2', 
+                                                'address':'address2',
+                                                'destination':'destination1',
                                                 'resource_id':'resource2'}
                                               ]
                                     }

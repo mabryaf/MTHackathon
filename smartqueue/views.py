@@ -29,14 +29,6 @@ from random import randrange # to simulate occupancy sensor and queue times
 from enum import Enum # for reservation states
 from datetime import datetime
 
-#instantiate smartqueue
-###Check if the update() is persistent
-# sq = smartqueue.SmartQueue(smartqueue.test2)
-# for queue in sq._SmartQueue__queues:
-#     user = random.choice(tests.users)["person_id"]
-#     resered = sq.reserve("e973d77cc5c911eaa2ba0242ac100002", "", 1, queue.id)
-    # print (queue.id, user)
-
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = models.Customer.objects.all()
     serializer_class = serializers.CustomerSerializer
@@ -59,10 +51,10 @@ def reservations(request):
     person_id = request.data.get("person_id")
 
     #add one reservation for user 1
-    queue_id = ''
-    for queue in sq._SmartQueue__queues:
-        queue_id = queue.id
-    sq.reserve("e973d45cc5c911eaa2ba0242ac100002", "", 1, queue_id)
+    # queue_id = ''
+    # for queue in sq._SmartQueue__queues:
+    #     queue_id = queue.id
+    # sq.reserve("e973d45cc5c911eaa2ba0242ac100002", "", 1, queue_id)
     
     #list the reservations
     reservations = sq.list_reservations(person_id)
@@ -71,33 +63,8 @@ def reservations(request):
         reservation['reservation_state'] = str(reservation['reservation_state'])
         reservation['start_time'] = str(reservation['start_time'])
         reservation['end_time'] = str(reservation['end_time'])
-        queryset = models.Resource.objects.filter(resource_id=reservation["resource"])
-        for query in queryset:
-            reservation["train_from"]= query.train_from
-            reservation["train_to"]= query.train_to
 
     return JsonResponse(reservations, safe=False)
-
-@api_view(['POST'])
-def reserve(request):
-    #Get posted data from JSON request
-    person_id = request.data.get("person_id")
-    proof_of_purchase = request.data.get("proof_of_purchase")
-    occupants = request.data.get("occupants")
-    queue_id = request.data.get("queue_id")
-
-    #execute reservation
-    result = sq.reserve(person_id, proof_of_purchase, occupants, queue_id)
-    
-    #update reward points
-    if result['code'] == smartqueue.ReserveActionResult.SUCCESS:
-        queryset = models.Customer.objects.filter(person_id=person_id)
-        for n in queryset:
-            n.reward_points += result['reward_points']
-            queryset.update()
-
-    # return Response({'Your reservation has been made'})
-    return JsonResponse(result['reward_points'], safe=False)
 
 @api_view(['POST'])
 def cancel_reservation(request):
@@ -124,13 +91,43 @@ def complete_reservation(request):
     # return JsonResponse(result, safe=False)
 
 @api_view(['POST'])
+def reserve(request):
+    #Get posted data from JSON request
+    person_id = request.data.get("person_id")
+    proof_of_purchase = request.data.get("proof_of_purchase")
+    occupants = request.data.get("occupants")
+    queue_id = request.data.get("queue_id")
+
+    #execute reservation
+    result = sq.reserve(person_id, proof_of_purchase, occupants, queue_id)
+    
+    #update reward points
+    # if result['code'] == smartqueue.ReserveActionResult.SUCCESS:
+    #     queryset = models.Customer.objects.filter(person_id=person_id)
+    #     for n in queryset:
+    #         n.reward_points += result['reward_points']
+    #         queryset.update()
+
+    # return Response({'Your reservation has been made'})
+    return JsonResponse(result['reward_points'], safe=False)
+
+@api_view(['POST'])
 def search(request):
     #Get posted data from JSON request
-    location1 = request.data.get("location1")
-    location2 = request.data.get("location2")
-    date = request.data.get("date")
-    time = request.data.get("time")
-    bestqueue = request.data.get("bestqueue")
+    resource_id = request.data.get("resource_id")
+    address_id = request.data.get("address_id")
+    address = request.data.get("address")
+    destination = request.data.get("destination")
+    datetime = request.data.get("date")
+    sort_bestqueue = request.data.get("sort_bestqueue")
+
+    datetime = arrow.get(datetime)
+
+    options = sq.list_queue_options(int(resource_id), address, destination, datetime, datetime.shift(minutes=+20))
+    for option in options:
+        option['start_time'] = str(option['start_time'])
+        option['end_time'] = str(option['end_time'])
+    return JsonResponse(options, safe=False)
 
     # location1 = 51, POUGHKEEPSIE
     # location2 = 1, GRAND CENTRAL
@@ -138,55 +135,44 @@ def search(request):
     # time = 1354
 
     #Create url api for stations
-    url = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/"+location1+"/"+location2+"/DepartBy/"+date+"/"+time+"/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
-    test = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/51/1/DepartBy/2020/07/15/1354/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
+    # url = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/"+location1+"/"+location2+"/DepartBy/"+date+"/"+time+"/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
+    # test = "https://mnorthstg.prod.acquia-sites.com/wse/trains/v4/51/1/DepartBy/2020/07/15/1354/9de8f3b1-1701-4229-8ebc-346914043f4a/Tripstatus.json"
 
     #Retrieve json from api
-    r = requests.get(test)
-    r = json.loads(r.text)
+    # r = requests.get(url)
+    # r = json.loads(r.text)
 
     #Retrieve details of interest in api
-    resource_list = []
-    for x in r["GetTripStatusJsonResult"]:
-        # origintime = x["OriginDateTime"]
-        # otime = origintime[:10]+" "+origintime[11:16]
-        # destinationtime = x["DestinationDateTime"]
-        # dtime = destinationtime[:10]+" "+destinationtime[11:16]
-        # resource_list.append((int(x["TrainName"]), x["Origin"], otime, dtime))
-        resource_list.append((int(x["TrainName"])))
+    # resource_list = []
+    # for x in r["GetTripStatusJsonResult"]:
+    #     origintime = x["OriginDateTime"]
+    #     otime = origintime[:10]+" "+origintime[11:16]
+    #     destinationtime = x["DestinationDateTime"]
+    #     dtime = destinationtime[:10]+" "+destinationtime[11:16]
+    #     resource_list.append((int(x["TrainName"]), , otime, dtime))
+    #     resource_list.append((int(x["TrainName"]), x["Origin"]))
 
-    print(resource_list)
+    # print(resource_list)
     # for queue in sq._SmartQueue__queues:
     #     print(queue.id)
     # for resource in sq._SmartQueue__resources:
     #     print(resource.id)    
     # for location in sq._SmartQueue__locations:
     #     print(location.address)
-
-    # a = "2020-07-15T15:20:44:00"
     
-
-    # if arrow.get() >= arrow.get('2020-07-15 13:00'):
-    #     print(True)
+    # final_date = date+" "+time
     # sample = sq.list_queue_options(8840, "POUGHKEEPSIE", '2020-07-06 13:00', '2020-07-16 13:20')
     # working sample
-    sample = sq.list_queue_options(8815, "Grand Central", '2020-07-06 13:00', '2020-07-16 13:20')
-
+    # sample = sq.list_queue_options(8815, "Grand Central", '2020-07-06 13:00', '2020-07-16 13:20')
     
-    for s in sample:
-        s['start_time'] = s['start_time'].format('YYYY-MM-DD HH:mm')
-        s['end_time'] = s['start_time'].format('YYYY-MM-DD HH:mm')
-    
+    # print(arrow.get(final_date))
     # #Create list that will be processed by smartqueue
-    final_list = []
-    for n in resource_list:
-        options = sq.list_queue_options(n[0], n[1], n[2], n[3])
-        final_list.append(options)
+    # final_list = []
+    # for n in resource_list:
+    #     options = sq.list_queue_options(n[0], n[1], arrow.get(final_date), arrow.get(final_date).shift(minutes=+30))
+    #     final_list.append(options)
 
-    print(sample)
-    print(final_list)
-    # return JsonResponse(final_list, safe=False)
-    return JsonResponse(sample, safe=False)
+    # return JsonResponse(sample, safe=False)
 
 @api_view(['GET'])
 def test(request):
@@ -195,32 +181,12 @@ def test(request):
     sq.update(r)
     return Response({'Welcome to Smartqueue API'})
 
-    # qs_json = serialize('json', queryset)
-    # print(qs_json)
-
-    # def get_queryset(self):
-    #     queryset = models.Resource.objects.all()
-    #     for query in queryset.all():
-    #         for location in query.locations.all():
-    #             print(location.address_id)
-    #     return queryset
-    # def list(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)
-    
-    # queryset = models.Resource.objects.all()
-    # data = list(queryset.values("locations"))
-    # return JsonResponse(data, safe=False)
-
-    # results = models.Resource.objects.values('id', 'resource_id','train_from','train_to','max_occupancy','occupancy_sensor','updated_date','locations')
-    # print(list(results))
-
 @api_view(['GET'])
 def testing(request):
     queuelist = []
     for queue in sq._SmartQueue__queues:
         queuelist.append(queue.id)
-        # print(queue.id)
+        print((queue.id, queue.resource_id, queue.address))
     return JsonResponse(queuelist, safe=False)
 
 

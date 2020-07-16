@@ -6,7 +6,7 @@ class Resource(models.Model):
     class Meta:
         db_table = 'resource'
         managed = False
-        unique_together = ('id', 'train_from', 'train_to', 'updated_date')
+        unique_together = ('resource_id', 'train_from', 'train_to', 'updated_date')
 
     id = models.UUIDField(max_length=32, primary_key=True)
     resource_id = models.IntegerField()
@@ -40,6 +40,7 @@ class Queue(models.Model):
     max_capacity = models.IntegerField()
     address_id = models.IntegerField()
     address = models.CharField(max_length=30)
+    destination = models.CharField(max_length=30)
     resource_id = models.IntegerField()
     location = models.ForeignKey(Location, related_name='queues', on_delete=models.CASCADE)
 

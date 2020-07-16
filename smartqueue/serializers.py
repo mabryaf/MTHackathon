@@ -9,7 +9,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 class QueueSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Queue
-        fields = ('queue_id','start_datetime','end_datetime','max_capacity','address_id','address','resource_id')
+        fields = ('queue_id','start_datetime','end_datetime','max_capacity','address_id','address', 'destination','resource_id')
 
 class LocationSerializer(serializers.ModelSerializer):
     queues = QueueSerializer(many=True)
