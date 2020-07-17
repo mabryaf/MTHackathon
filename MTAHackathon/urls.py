@@ -21,8 +21,8 @@ from smartqueue.smartqueue import sq
 import requests
 import json
 from datetime import datetime
-from parse import *
-import pytz
+# from parse import parse
+# import pytz
 
 router = routers.DefaultRouter()
 router.register(r'locations', views.LocationViewSet)
