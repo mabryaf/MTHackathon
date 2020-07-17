@@ -6,5 +6,5 @@ from updater import updaterApi
 def start():
     print("updater")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(updaterApi.update_smartqueue, 'interval', minutes=30)
+    scheduler.add_job(updaterApi.update_smartqueue, 'interval', minutes=40)
     scheduler.start()
