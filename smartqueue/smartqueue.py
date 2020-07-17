@@ -162,8 +162,8 @@ class ReserveActionResult(Enum):
   OTHER_FAILURE = 3
 
 class Queue:
-  def __init__(self, max_capacity, open_datetime, close_datetime, address, destination, resource_id):
-    self.id =  uuid.uuid1().hex
+  def __init__(self, queue_id, max_capacity, open_datetime, close_datetime, address, destination, resource_id):
+    self.id =  queue_id
     self.open_datetime = arrow.get(open_datetime)
     self.close_datetime = arrow.get(close_datetime)
     self.max_capacity = max_capacity
@@ -264,7 +264,7 @@ class TestQueue(unittest.TestCase):
     address = "123main"
     destination = 'destination1'
     resource_id = "resource1"
-    self.queue = Queue(10, open, close, address, destination, resource_id)
+    self.queue = Queue("queue", 10, open, close, address, destination, resource_id)
 
   def test_queue_creation(self):
     self.assertTrue(isinstance(self.queue.id, str))
@@ -580,7 +580,7 @@ class TestLocation(unittest.TestCase):
     address = '123main'
     destination = 'dest'
     resource_id = 'resource1'
-    queue = Queue(5, open, close, address, destination, resource_id)
+    queue = Queue("queue", 5, open, close, address, destination, resource_id)
     self.location.add_queue(queue)
 
     self.assertEqual(len(self.location.queues),1)
@@ -600,7 +600,7 @@ class TestLocation(unittest.TestCase):
     #queue 1
     queue1_open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     queue1_close = arrow.get('2020-07-04 13:16', 'YYYY-MM-DD HH:mm')
-    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
+    queue1 = Queue("queue1", default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue1)
     remaining_location_capacity = self.location.remaining_capacity(queue1_open, queue1_close)
     self.location.queues[0].reserve("person1", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -608,7 +608,7 @@ class TestLocation(unittest.TestCase):
     #queue 2
     queue2_open = arrow.get('2020-07-04 13:05', 'YYYY-MM-DD HH:mm')
     queue2_close = arrow.get('2020-07-04 13:14', 'YYYY-MM-DD HH:mm')
-    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
+    queue2 = Queue("queue2", default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
     self.location.add_queue(queue2)
     remaining_location_capacity = self.location.remaining_capacity(queue2_open, queue2_close)
     self.location.queues[1].reserve("person2", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -618,7 +618,7 @@ class TestLocation(unittest.TestCase):
     #queue 3
     queue3_open = arrow.get('2020-07-04 13:13', 'YYYY-MM-DD HH:mm')
     queue3_close = arrow.get('2020-07-04 13:20', 'YYYY-MM-DD HH:mm')
-    queue3 = Queue(default_queue_max_capacity, queue3_open, queue1_close, address, destination, resource_id)
+    queue3 = Queue("queue3", default_queue_max_capacity, queue3_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue3)
     remaining_location_capacity = self.location.remaining_capacity(queue3_open, queue3_close)
     self.location.queues[2].reserve("person5", proof_of_purchase, occupants, reward_points, remaining_resource_capacity, remaining_location_capacity)
@@ -645,13 +645,13 @@ class TestLocation(unittest.TestCase):
     #queue 1
     queue1_open = arrow.get('2020-07-04 13:00', 'YYYY-MM-DD HH:mm')
     queue1_close = arrow.get('2020-07-04 13:16', 'YYYY-MM-DD HH:mm')
-    queue1 = Queue(default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
+    queue1 = Queue("queue1", default_queue_max_capacity, queue1_open, queue1_close, address, destination, resource_id)
     self.location.add_queue(queue1)
 
     #queue 2
     queue2_open = arrow.get('2020-07-04 13:05', 'YYYY-MM-DD HH:mm')
     queue2_close = arrow.get('2020-07-04 13:14', 'YYYY-MM-DD HH:mm')
-    queue2 = Queue(default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
+    queue2 = Queue("queue2", default_queue_max_capacity, queue2_open, queue2_close, address, destination, resource_id)
     self.location.add_queue(queue2)
 
     remaining_resource_capacity = 10
@@ -733,6 +733,12 @@ class SmartQueue:
       if location.address.lower() == address.lower(): exists = True
     return not exists
 
+  def __queue_does_not_exist(self, queue_id):
+    exists = False
+    for queue in self.__queues:
+      if queue.id == queue_id: exists = True
+    return not exists
+
   def __add_resource_if_it_does_not_exist(self, resource_id, resource):
     if self.__resource_does_not_exist(resource_id):
       self.__resources.append(resource)
@@ -740,6 +746,14 @@ class SmartQueue:
   def __add_location_if_it_does_not_exist(self, address, location):
     if self.__location_does_not_exist(address):
       self.__locations.append(location)
+
+  def __add_queue_if_it_does_not_exist(self, queue_id, queue, address):
+    if self.__queue_does_not_exist(queue_id):
+      self.__queues.append(queue)
+      #add the new queue to the proper location
+      location = self.__find_location(address)
+      location.add_queue(queue)
+  
 
   def update(self, queue_schedule):
     #update resources
@@ -759,18 +773,14 @@ class SmartQueue:
 
         #update queues
         for queue in location['queues']:
+          queue_id = queue['queue_id']
           max_capacity = queue['max_capacity']
           start_datetime = queue['start_datetime']
           end_datetime = queue['end_datetime']
           address = queue['address']
           destination = queue['destination']
-
-          new_queue = Queue(max_capacity, start_datetime, end_datetime, address, destination, resource_id)
-          self.__queues.append(new_queue)
-          
-          #add the new queue to the proper location
-          location = self.__find_location(address)
-          location.add_queue(new_queue)
+          new_queue = Queue(queue_id, max_capacity, start_datetime, end_datetime, address, destination, resource_id)
+          self.__add_queue_if_it_does_not_exist(queue_id, new_queue, address)
 
   def __find_location(self, address):
     for location in self.__locations:
@@ -859,6 +869,7 @@ class SmartQueue:
     details = {
         'reservation_id':reservation.id,
         'reservation_state':reservation.state,
+        'queue_id':queue.id,
         'start_time':queue.open_datetime,
         'end_time':queue.close_datetime,
         'resource':queue.resource_id,
@@ -887,6 +898,10 @@ class SmartQueue:
   def cancel_reservation(self, queue_id, person_id):
     queue = self.__find_queue(queue_id)
     queue.cancel_reservation(person_id)
+
+  def miss_reservation(self, queue_id, person_id):
+    queue = self.__find_queue(queue_id)
+    queue.miss_reservation(person_id)
   
   def terminate_queues_for_a_location_and_timeframe(self, address, start_datetime, end_datetime):
     pass
@@ -976,7 +991,7 @@ class TestSmartQueue(unittest.TestCase):
     start_datetime = arrow.get('2020-07-06 13:00', 'YYYY-MM-DD HH:mm')
     end_datetime = arrow.get('2020-07-06 13:20', 'YYYY-MM-DD HH:mm')
     queue_options = self.smartqueue.list_queue_options('resource3', 'address1', 'destination1', start_datetime, end_datetime)
-    self.assertEqual(len(queue_options), 1)
+    self.assertEqual(len(queue_options), 2)
 
     #test addding a new location
     queue_schedule = [

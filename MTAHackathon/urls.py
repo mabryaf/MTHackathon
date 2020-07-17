@@ -47,6 +47,7 @@ urlpatterns = [
 
 #Gets initial smartqueue schedule
 r = requests.get("https://smartqueueapi.azurewebsites.net/resource/")
+print("urls")
 r = json.loads(r.text)
 # def filter_data(trains):
 #        sq_data = []
