@@ -20,6 +20,9 @@ from smartqueue import views
 from smartqueue.smartqueue import sq
 import requests
 import json
+from datetime import datetime
+from parse import *
+import pytz
 
 router = routers.DefaultRouter()
 router.register(r'locations', views.LocationViewSet)
@@ -45,4 +48,18 @@ urlpatterns = [
 #Gets initial smartqueue schedule
 r = requests.get("https://smartqueueapi.azurewebsites.net/resource/")
 r = json.loads(r.text)
+# def filter_data(trains):
+#        sq_data = []
+#        now = datetime.now()
+#        timezone = pytz.timezone('US/Eastern')
+#        filtered_trains = [train for train in trains if parse(train['updated_date']).date() >= now.date()]
+#        for ft in filtered_trains:
+#                destination = ft['locations'][-1]
+#                queue = destination['queues'][0]
+#                end_datetime = parse(queue['end_datetime'])
+#                now_tz = timezone.localize(now)
+#                if (end_datetime >=now_tz):
+#                     sq_data.append(ft)
+#        return sq_data
+# filter_data(r)
 sq.update(r)
